@@ -1,0 +1,19 @@
+# Build output
+build/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.eclipse/
+.classpath
+.project
+.settings/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Don't upload original Verity JE mod (third-party, All Rights Reserved)
+verity-5.6.4.jar

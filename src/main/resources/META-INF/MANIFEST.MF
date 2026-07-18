@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Specification-Title: bilicrash
+Specification-Vendor: Anonymous
+Specification-Version: 1
+Implementation-Title: BilibiliCrashMod
+Implementation-Version: 1.0.0
+Implementation-Vendor: Anonymous
