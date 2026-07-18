@@ -2,13 +2,31 @@ package varmite.bilicrash;
 
 import java.awt.Desktop;
 import java.net.URI;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.forgespi.language.IModInfo;
 
 @Mod("bilicrash")
 public class BiliCrash {
     public BiliCrash() {
-        openBrowser();
-        throw new RuntimeException("Never Gonna Give You Up");
+        if (isVerityLoaded()) {
+            openBrowser();
+            throw new RuntimeException("Never Gonna Give You Up");
+        }
+    }
+
+    private static boolean isVerityLoaded() {
+        try {
+            ModList list = ModList.get();
+            if (list != null) {
+                for (IModInfo info : list.getMods()) {
+                    if ("verity".equals(info.getModId())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     private static void openBrowser() {

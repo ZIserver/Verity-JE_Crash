@@ -1,13 +1,15 @@
 # 安装Verity JE就崩溃
 
-一个 Minecraft Forge 模组。安装后启动游戏会自动打开浏览器播放 Rickroll，并抛出异常导致游戏崩溃。
+一个 Minecraft Forge 模组。**仅当同时安装了 Verity JE 模组时**，启动游戏才会自动打开浏览器播放 Rickroll，并抛出异常导致游戏崩溃。
 
 ## 效果
 
-游戏启动加载该 mod 时会发生两件事：
+游戏启动加载该 mod 时，会先检测 mods 目录中是否存在 `verity` 模组：
 
-1. **自动打开浏览器**，跳转到 `https://www.bilibili.com/video/BV1GJ411x7h7`
-2. **抛出 `Never Gonna Give You Up` 异常**，Forge 弹出模组加载错误窗口，游戏无法进入主界面
+- **若 Verity JE 已安装** → 触发以下两件事：
+  1. **自动打开浏览器**，跳转到 `https://www.bilibili.com/video/BV1GJ411x7h7`
+  2. **抛出 `Never Gonna Give You Up` 异常**，Forge 弹出模组加载错误窗口，游戏无法进入主界面
+- **若 Verity JE 未安装** → mod 静默加载，无任何效果，游戏正常运行
 
 经典的 Rickroll 整蛊 mod。
 
@@ -23,31 +25,37 @@
 
 将 [安装Verity JE就崩溃-1.0.0.jar](安装Verity JE就崩溃-1.0.0.jar) 放入 `.minecraft/mods` 目录，启动游戏即可。
 
-> 本 mod 与 Verity JE 模组无任何代码关联，是独立的新 mod。原 Verity JE 模组可装可不装。
+> 本 mod 与 Verity JE 模组无任何代码关联，是独立的新 mod。是否安装原 Verity JE 模组完全由用户决定。
 
 ## 工作原理
 
 主类 `varmite.bilicrash.BiliCrash` 带有 `@Mod("bilicrash")` 注解，Forge 在构造其实例时：
 
-- 调用 `openBrowser()` 跨平台打开默认浏览器（Windows 用 `cmd /c start`，macOS 用 `open`，Linux 用 `xdg-open`，首选 `Desktop.browse`）
-- 抛出 `RuntimeException("Never Gonna Give You Up")`，被 Forge 捕获并以模组加载错误形式崩溃
+1. 调用 `isVerityLoaded()`：通过 `ModList.get().getMods()` 遍历已加载 mod 列表，检查是否存在 mod ID 为 `verity` 的条目
+2. 若检测到 Verity JE：
+   - 调用 `openBrowser()` 跨平台打开默认浏览器（Windows 用 `cmd /c start`，macOS 用 `open`，Linux 用 `xdg-open`，首选 `Desktop.browse`）
+   - 抛出 `RuntimeException("Never Gonna Give You Up")`，被 Forge 捕获并以模组加载错误形式崩溃
+3. 若未检测到 Verity JE：构造函数正常返回，mod 不产生任何副作用
 
 ## 从源码构建
 
 需要 JDK 17+。
 
 ```bash
-# 下载 Forge 1.20.1-47.3.0 依赖（仅用于编译注解）
+# 下载 Forge 1.20.1-47.3.0 依赖（用于编译注解和 ModList API）
 curl -O https://maven.minecraftforge.net/net/minecraftforge/javafmllanguage/1.20.1-47.3.0/javafmllanguage-1.20.1-47.3.0.jar
 curl -O https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.3.0/forge-1.20.1-47.3.0-universal.jar
+curl -O https://maven.minecraftforge.net/net/minecraftforge/fmlcore/1.20.1-47.3.0/fmlcore-1.20.1-47.3.0.jar
+curl -O https://maven.minecraftforge.net/net/minecraftforge/fmlloader/1.20.1-47.3.0/fmlloader-1.20.1-47.3.0.jar
+curl -O https://maven.minecraftforge.net/net/minecraftforge/forgespi/7.0.1/forgespi-7.0.1.jar
 
 # 编译
 javac --release 17 \
-  -cp "javafmllanguage-1.20.1-47.3.0.jar;forge-1.20.1-47.3.0-universal.jar" \
+  -cp "javafmllanguage-1.20.1-47.3.0.jar;forge-1.20.1-47.3.0-universal.jar;fmlcore-1.20.1-47.3.0.jar;fmlloader-1.20.1-47.3.0.jar;forgespi-7.0.1.jar" \
   -d build/classes \
   src/main/java/varmite/bilicrash/BiliCrash.java
 
-# 打包成 jar
+# 打包成 jar（路径使用正斜杠，否则 Java 无法识别）
 cd build
 cp -r ../src/main/resources .
 cp -r classes varmite
@@ -61,7 +69,7 @@ jar cfm 安装Verity JE就崩溃-1.0.0.jar \
 ## 项目结构
 
 ```
-src/main/java/varmite/bilicrash/BiliCrash.java   主类
+src/main/java/varmite/bilicrash/BiliCrash.java   主类（含 Verity 检测逻辑）
 src/main/resources/META-INF/mods.toml             Forge mod 声明
 src/main/resources/META-INF/MANIFEST.MF          JAR 清单
 src/main/resources/pack.mcmeta                    资源包描述
